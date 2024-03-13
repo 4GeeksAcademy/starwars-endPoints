@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Personajes, Planetas, Favoritos
 #from models import Person
 
 app = Flask(__name__)
@@ -30,7 +30,6 @@ setup_admin(app)
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
-
 # generate sitemap with all your endpoints
 @app.route('/')
 def sitemap():
@@ -38,12 +37,45 @@ def sitemap():
 
 @app.route('/user', methods=['GET'])
 def handle_hello():
+    user=User.query.all()
+    if user == []:
+        return jsonify ({"msg":"no existen usuarios"})
+    resultado = list(map(lambda usuario:usuario.serialize(),user))
+    
+    return jsonify(resultado), 200
 
-    response_body = {
-        "msg": "Hello, this is your GET /user response "
-    }
+@app.route('/planetas', methods=['GET'])
+def get_planetas():
+    planetas=Planetas.query.all()
+    if planetas == []:
+        return jsonify ({"msg":"no existen planetas"})
+    resultado = list(map(lambda planeta:planeta.serialize(),planetas))
+    
+    return jsonify(resultado), 200
 
-    return jsonify(response_body), 200
+@app.route('/planetas/<int:id>', methods=['GET'])
+def get_planeta_id(id):
+    planeta=Planetas.query.filter_by(id=id).first()
+    if planeta is None:
+        return jsonify ({"msg":"no existen planetas"})
+    return jsonify(planeta.serialize()), 200
+
+
+@app.route('/people', methods=['GET'])
+def get_People():
+    personajes=Personajes.query.all()
+    if personajes == []:
+        return jsonify ({"msg":"no existen personajes"})
+    resultado = list(map(lambda personaje:personaje.serialize(),personajes))
+    
+    return jsonify(resultado), 200
+
+@app.route('/people/<int:id>', methods=['GET'])
+def get_people_id(id):
+    people=Personajes.query.filter_by(id=id).first()
+    if people is None:
+        return jsonify ({"msg":"no existen personajes"})
+    return jsonify(people.serialize()), 200
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
