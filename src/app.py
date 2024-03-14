@@ -9,6 +9,7 @@ from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
 from models import db, User, Personajes, Planetas, Favoritos
+import json
 #from models import Person
 
 app = Flask(__name__)
@@ -76,6 +77,78 @@ def get_people_id(id):
     if people is None:
         return jsonify ({"msg":"no existen personajes"})
     return jsonify(people.serialize()), 200
+
+
+@app.route('/favorite/people/<int:people_id>', methods=['POST',"DELETE"])
+def post_people_id(people_id):
+    body = json.loads(request.data)
+    usuario=body['user_id']
+
+    userexist=User.query.filter_by(id=usuario).first()
+    if userexist is None:  
+        return jsonify ({"msg":"no existe el usuario"})
+    
+    peopleexist=Personajes.query.filter_by(id=people_id).first()
+    if peopleexist is None:  
+        return jsonify ({"msg":"no existe el personaje"})
+    
+    if request.method=="POST":
+        nuevoFavorito=Favoritos(
+            userid=usuario,
+            personajesid=people_id
+
+    )
+        db.session.add(nuevoFavorito)
+        db.session.commit()
+        return jsonify ({"msg":"favorito creado"})
+    
+
+    if request.method=="DELETE":
+        personaje=Favoritos.query.filter_by(personajesid=people_id).first()
+        db.session.delete(personaje)
+        db.session.commit()
+        return jsonify ({"msg":"favorito eliminado"})
+    
+@app.route('/favorite/planets/<int:planet_id>', methods=['POST',"DELETE"])
+def post_planet_id(planet_id):
+    body = json.loads(request.data)
+    usuario=body['user_id']
+
+    userexist=User.query.filter_by(id=usuario).first()
+    if userexist is None:  
+        return jsonify ({"msg":"no existe el usuario"})
+    
+    planetexist=Planetas.query.filter_by(id=planet_id).first()
+    if planetexist is None:  
+        return jsonify ({"msg":"no existe el planeta"})
+    
+    if request.method=="POST":
+        nuevoFavorito=Favoritos(
+            userid=usuario,
+            planetasid=planet_id
+
+    )
+        db.session.add(nuevoFavorito)
+        db.session.commit()
+        return jsonify ({"msg":"favorito creado"})
+    
+
+    if request.method=="DELETE":
+        planeta=Favoritos.query.filter_by(planetasid=planet_id).first()
+        db.session.delete(planeta)
+        db.session.commit()
+        return jsonify ({"msg":"favorito eliminado"})
+
+@app.route('/favorite/user/<int:id>', methods=['GET'])
+def get_favoritos_id(id):
+    people=Favoritos.query.filter_by(userid=id).all()
+    if people == []:
+        return jsonify ({"msg":"no existen favoritos"})
+    resultado = list(map(lambda personaje:personaje.serialize(),people))
+    
+    return jsonify(resultado), 200
+
+
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
